@@ -10,7 +10,7 @@ NC="\033[0m"    # NO COLOR
 
 # ----- Check if not root
 if [[ $EUID -ne 0 ]]; then
-	/usr/bin/printf "${R}>>>>${NC} Please run as root:\nsudo -H %s\n" "${0}"
+	/usr/bin/printf "${R}>>>> Please run as root:\nsudo %s ${NC}\n" "${0}"
 	exit 1
 fi
 
@@ -19,12 +19,28 @@ device="chardev"
 group="root"
 mode="666"
 
-/sbin/insmod $module || exit 1
+# /sbin/insmod $module || exit 1
+
+if /sbin/insmod $module; then
+        /usr/bin/printf "${G}>>>> Inserted module succesfully ${NC}\n"
+else
+        /usr/bin/printf "${R}>>>> Error inserting module ${NC}\n"
+	exit 1
+fi
 
 major=`cat /proc/devices | awk "\\$2==\"$device\" {print \\$1}"`
 
-rm -f /dev/${device}
-mknod /dev/${device} c $major 0
+if [[ -c "/dev/${device}" ]]; then
+        /usr/bin/printf "${Y}>>>> Device file already exists, deleting it first...  ${NC}\n"
+        rm -f /dev/${device}
+fi
+
+if mknod /dev/${device} c $major 0; then
+	/usr/bin/printf "${G}>>>> Created character device ${NC}\n"
+else
+	/usr/bin/printf "${R}>>>> Error creating character device ${NC}\n"
+	exit 1
+fi
 
 chgrp $group /dev/${device}
 chmod $mode /dev/${device}
