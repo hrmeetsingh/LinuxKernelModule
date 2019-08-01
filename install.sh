@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Color codes
 
 G="\033[1;32m"  # GREEN
